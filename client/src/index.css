@@ -7,6 +7,10 @@
     height: 100%;
     background: transparent;
 }
+/* 
+*{
+    font-family: Outfit;
+} */
 
 .slider::-webkit-slider-thumb{
     appearance: none;
