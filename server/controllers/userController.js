@@ -159,4 +159,34 @@ const paymentRazorpay = async (req,res) =>{
     }
 }
 
-export {clerkwebhooks, userCredits, paymentRazorpay}
+//Api controller function to verify razorpay payment
+const verifyRazorpay = async (req, res) =>{
+    try {
+      const { razorpay_order_id } = req.body
+      const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
+      
+      if(orderInfo.status === 'paid'){
+        const transationData = await transationModel.findById(orderInfo.receipt)
+        if(transationData.payment){
+            return res.json({success: false, message: "Payment Failed"})
+        }
+
+        //Adding credits in user data
+        const userData = await userModel.findOne({clerkId: transationData.clerkId})
+        const creditBalance = userData.creditBalance + transationData.credits
+        await userModel.findByIdAndUpdate(userData._id,{creditBalance})
+
+        //making the payment true
+        await userModel.findByIdAndUpdate(transationData._id,{payment: true})
+
+        res.json({success: true, message: "Credits Added"})
+
+      }
+      
+    } catch (error) {
+        console.log(error.message);
+        res.json({success: false, message: error.message}) 
+    }
+}
+
+export {clerkwebhooks, userCredits, paymentRazorpay,verifyRazorpay}
